@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-ray · SKILL_NAME</title>
+<!--
+  TEMPLATE for /skill-xray. Copy, replace every SCREAMING_PLACEHOLDER, delete demo content.
+  Write the FILLED copy to xray-<target>.html beside the target skill (or /tmp);
+  NEVER overwrite this template file itself.
+
+  The page is CLEAN until touched: an IDE-style file tree (VS Code / Cursor idiom: chevrons,
+  folder and file icons, indent guides, real nesting) and the selected file. No header text, no
+  standing panels, no summary blocks. Everything else appears ON INTERACTION:
+
+  TWO MODES, toggled at the top of the sidebar ([X-ray | Report], IDE view-switcher idiom):
+    · X-RAY MODE (default) is everything described below: the file, the hover cards.
+    · REPORT MODE swaps the reading pane for the data points: the checklist score
+      ("N/20 checks pass"), the top three improvements ranked by behavior change, every check
+      as a ✓/✗ row, a "what's missing" section (the GAP findings: absent things whose addition
+      would change behaviour), and the color legend. Every ✗/gap/improvement row carries
+      data-jump and clicking it flips back to x-ray mode, opens the right file, scrolls to the
+      region and pins its card. The checklist lives in references/prediction.md §4; verdicts are
+      filled at authoring time, plain words, deterministic (same file, same score).
+    · The Report toggle carries a small red badge with the FAIL COUNT, only when fails > 0
+      (red only ever means broken). A fully passing skill shows a clean toggle, no numbers
+      anywhere in x-ray mode.
+
+    · Hover a section → a floating card appears beside it and FOLLOWS the cursor vertically.
+      Inside: the role, the line range, one "what it does" sentence, then the DIAL ROWS, one per
+      knob: a small dial + a QUESTION the section itself raises ("Want the phone check to
+      actually run?", "Want it to fire more often?"). Hovering a row TURNS the dial needle and
+      reveals the answer: the exact edit. Labels are context-driven questions (≤ 8 words), never
+      abstract nouns; the dial is the knob metaphor made literal but subtle; no tab chrome.
+    · Hover a marked word → the SAME card swaps to that word (chip + one line); leave → back.
+    · Click a section pins its card (Esc unpins). Mobile: tap shows the card inline below the
+      section; tap a dial row to turn it.
+
+  The three edits found their home (Kriss 2026-08-20): they are the "fix first" list at the top
+  of REPORT MODE, ranked by size of behavior change. Repeat them in the chat hand-off too.
+
+  Authoring shape per region (every line of the file appears in exactly one region):
+
+    <section class="region r-ROLE" tabindex="0" data-role="ROLE LABEL" data-ln="L1–L14"
+             style="counter-reset:line START_MINUS_1">
+      <div class="txt"><div class="l">one escaped line per .l</div>…</div>
+      <aside class="card">
+        <div class="word"></div>
+        <div class="sec">
+          <div class="head"><span class="role">ROLE LABEL</span><span class="ln">L1–L14</span></div>
+          <p class="does">ONE SENTENCE, ≤ 20 words.</p>
+          <div class="knob"><svg class="dial" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><g class="nd"><line x1="10" y1="10" x2="10" y2="4.6"/></g></svg>
+            <div class="kb"><b>QUESTION, ≤ 8 words?</b><span class="edit">THE EDIT that answers it, ≤ 15 words.</span></div></div>
+          (more .knob rows; omit if none)
+        </div>
+      </aside>
+    </section>
+
+  Marks carry data-tip (≤ 18 words). Tip contract: every tip says something ONLY true of THIS
+  skill (the actual rival, the actual cost, the actual consequence); no two tips in one x-ray may
+  share the same text; a tip that could be pasted into another skill's x-ray unchanged is too
+  generic, rewrite it.
+
+  LEVER / WASTE / GAP (hard, Kriss 2026-08-21, the full contract is prediction.md §2): describing
+  what a line says is BANNED; the file is self-explanatory. Every annotation is a LEVER (these
+  words control this behaviour; turn direction → predicted change), WASTE (costs tokens, changes
+  nothing: repeats marked gray in place via mark.dead, tip names where the surviving copy lives),
+  or a GAP (missing thing whose addition changes behaviour; lives as a dial in its region AND as
+  a row under "what's missing" in report mode). A genuine CONTRADICTION between two files (two
+  different numbers for the same rule) is marked mark.bad on BOTH sites, red, because red means
+  broken. REFERENCE FILES get the same treatment as SKILL.md: their top levers and waste are
+  marked, and their card carries real dials; in a judgment skill the reference files are the
+  engine, and an unmarked reference pane is an unfinished x-ray.
+
+  PLAIN SPEECH (hard, Kriss 2026-08-20): every tip, card sentence, check row, and knob line is a
+  sentence you would say OUT LOUD to a friend while pointing at the line, naming real things
+  (Claude, this file, the chat, tokens, the other skill). BANNED: skill-engineering dialect and
+  grammar-role labels ("load-bearing", "anchor", "surface", "blast radius", "the gate",
+  "the failure this blocks", "the not-me clause" as the whole explanation). Test: if Kriss would
+  have to ask "what does that mean", rewrite it. "Without this line, Claude sometimes types the
+  deck into the chat instead of building the file" is the standard.
+
+  COLOR = MEANING (hard): six colors, each a verb, used identically by outlines, marks, dials
+  and card accents. Blue STARTS it (triggers) · orange STOPS it (exclusions, gates, hard rules)
+  · yellow IS THE WORK (steps, taste, calibration) · purple IS A DOOR (opens another file) ·
+  red only ever means BROKEN (dead pointer, failed check) · gray means WASTED (costs tokens,
+  changes nothing). Never use red for anything that is not broken. The legend renders once, in
+  report mode.
+
+  Reader width: the file column must fit ~100 mono characters at desktop
+  width so hard-wrapped prose never double-wraps; strip trailing whitespace per line when
+  escaping. Visual rules (hard): dark console tokens; hover = vivid
+  OUTLINE only, no tint, no left border. Self-contained: no CDN, no web fonts, no remote
+  anything. Do not modify the JS or the palette.
+-->
+<style>
+  :root{
+    --bg:#0a0a0a; --card:#0e0e0e; --card2:#121212; --line:#1f1f1f; --line2:#333;
+    --ink:#ededed; --ink2:#9f9f9f; --ink4:#707070; --ink5:#5f5f5f;
+    /* color = meaning: blue starts it, orange stops it, yellow is the work,
+       purple is a door, red only ever means broken, gray means wasted */
+    --c-start:#3b82f6; --c-stop:#fb923c; --c-work:#fbbf24; --c-door:#a78bfa;
+    --c-broken:#f87171; --c-dead:#5f5f5f;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans);
+       -webkit-font-smoothing:antialiased}
+  .app{display:flex;max-width:1440px;margin:0 auto;min-height:100vh;
+       border-left:1px solid var(--line);border-right:1px solid var(--line)}
+
+  /* ── left: IDE tree (VS Code idiom) ─────────────────────────────── */
+  .side{width:224px;flex:none;border-right:1px solid var(--line);padding:12px 6px;
+        position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;
+        display:flex;flex-direction:column}
+  .tree{flex:1;font-size:12.5px}
+  .trow{display:flex;align-items:center;gap:5px;height:24px;width:100%;background:none;border:0;
+        color:var(--ink2);font:inherit;text-align:left;border-radius:4px;cursor:pointer;
+        padding:0 8px 0 calc(10px + var(--d,0)*14px);white-space:nowrap}
+  .trow:hover{background:#161616}
+  .trow.on{background:#1a1a1a;color:var(--ink)}
+  .trow svg{flex:none;width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.1;
+            opacity:.85}
+  .trow .chev{width:13px;height:13px;stroke-width:1.5;transition:transform .12s;
+              transform:rotate(90deg)}
+  .drow.closed .chev{transform:none}
+  .trow .nm{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .trow .tk{font-family:var(--mono);font-size:10px;color:var(--ink5);cursor:help}
+  .trow.on .tk{color:var(--ink4)}
+  .kids{position:relative}
+  .kids::before{content:"";position:absolute;top:2px;bottom:2px;left:var(--g,16px);width:1px;
+                background:#1a1a1a}
+  .kids.closed{display:none}
+  .side .meta{font-family:var(--mono);font-size:10px;color:var(--ink5);padding:10px 10px 2px}
+
+  /* ── the file ───────────────────────────────────────────────────── */
+  .main{flex:1;min-width:0;padding:20px 24px 90px}
+  .pane{display:none}
+  .pane.on{display:block;max-width:740px}
+  @media (min-width:981px){.pane.on{max-width:min(760px,calc(100% - 320px))}}
+  .region{position:relative;border-radius:10px;padding:2px 0;outline:1.5px solid transparent;
+          outline-offset:2px;transition:outline-color .12s ease}
+  .region:hover,.region:focus,.region.pin{outline-color:var(--rc)}
+  .region{--rc:var(--ink5)}
+  .r-trigger{--rc:var(--c-start)} .r-gate,.r-rule{--rc:var(--c-stop)}
+  .r-step,.r-idea{--rc:var(--c-work)} .r-pointer{--rc:var(--c-door)}
+  .r-dead{--rc:var(--c-dead)}
+  .r-dead .txt{opacity:.55}
+  .txt{font-family:var(--mono);font-size:11.5px;line-height:1.7;padding:8px 12px 8px 2px;overflow-x:auto}
+  .l{white-space:pre-wrap;counter-increment:line;padding-left:48px;position:relative;min-height:1.7em}
+  .l::before{content:counter(line);position:absolute;left:0;width:34px;text-align:right;
+             color:var(--ink5);opacity:.7;font-size:10px;user-select:none}
+  mark{background:transparent;color:inherit;border-radius:4px;padding:0 3px;cursor:default;
+       outline:1px solid var(--mc,var(--ink5))}
+  mark.live{background:color-mix(in srgb,var(--mc) 22%,transparent)}
+  mark.trig{--mc:var(--c-start)} mark.excl,mark.gate{--mc:var(--c-stop)}
+  mark.ptr{--mc:var(--c-door)} mark.ptr.bad{--mc:var(--c-broken);text-decoration:line-through}
+  mark.hot,mark.idea{--mc:var(--c-work)}
+  mark.dead{--mc:var(--c-dead)} .txt mark.dead{opacity:.75}
+  mark.bad{--mc:var(--c-broken)}
+  .stub{border:1px dashed var(--line2);border-radius:10px;padding:22px;color:var(--ink2);
+        font-size:13px;max-width:560px}
+  .stub .nm{font-family:var(--mono);color:var(--ink);font-size:13px}
+  .stub .sz{font-family:var(--mono);font-size:11px;color:var(--ink5);margin:2px 0 10px}
+
+  /* ── the floating card ──────────────────────────────────────────── */
+  .card{position:absolute;left:calc(100% + 20px);top:8px;width:300px;opacity:0;pointer-events:none;
+        transition:opacity .12s ease;background:var(--card2);border:1px solid var(--line2);
+        border-radius:10px;padding:13px 15px;font-size:12.5px;color:var(--ink2);z-index:3}
+  .region:hover>.card,.region:focus>.card,.region.pin>.card,.card.ghold{opacity:1;pointer-events:auto}
+  /* invisible bridge across the gap so the cursor can travel into the card without losing hover */
+  .card::before{content:"";position:absolute;top:0;bottom:0;left:-22px;width:22px}
+  .card .head{display:flex;align-items:baseline;gap:8px}
+  .card .role{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+              font-weight:600;color:var(--rc)}
+  .card .ln{font-family:var(--mono);font-size:10px;color:var(--ink5);margin-left:auto}
+  .card .does{margin:8px 0 0;color:var(--ink)}
+  .card .word{display:none}
+  .card.wmode .sec{display:none}
+  .card.wmode .word{display:block}
+  .card .wordchip{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--ink);
+        outline:1px solid var(--rc);border-radius:4px;padding:1px 6px;margin:8px 0 6px;
+        background:color-mix(in srgb,var(--rc) 14%,transparent)}
+  .card .word p{margin:0;color:var(--ink2)}
+
+  /* dial rows: the knob metaphor. Hover (tap on mobile) turns the needle and reveals the edit. */
+  .knob{display:flex;gap:10px;align-items:flex-start;padding:9px 0 7px;margin-top:7px;
+        border-top:1px solid var(--line);cursor:pointer}
+  .knob:first-of-type{margin-top:10px}
+  .dial{flex:none;width:20px;height:20px;margin-top:1px}
+  .dial circle{fill:none;stroke:var(--rc);opacity:.45;stroke-width:1.2}
+  .dial .nd line{stroke:var(--rc);stroke-width:1.7;stroke-linecap:round}
+  .dial .nd{transform-origin:10px 10px;transform:rotate(-55deg);
+            transition:transform .3s cubic-bezier(.34,1.45,.5,1)}
+  .knob:hover .nd,.knob.on .nd{transform:rotate(55deg)}
+  .kb{min-width:0}
+  .kb b{display:block;color:var(--ink);font-weight:500;font-size:12.5px}
+  .kb .edit{display:block;color:var(--ink2);font-size:12px;max-height:0;opacity:0;overflow:hidden;
+            transition:max-height .25s ease,opacity .2s ease,margin .25s ease}
+  .knob:hover .edit,.knob.on .edit{max-height:96px;opacity:1;margin-top:3px}
+  .kb code{font-family:var(--mono);font-size:11px;background:var(--bg);
+           border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+  /* mode toggle: [X-ray | Report ·N]. Badge shows only while checks fail. */
+  .mode{display:flex;gap:3px;margin:0 8px 12px;padding:3px;border:1px solid var(--line);
+        border-radius:8px}
+  .mode button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:24px;
+        background:none;border:0;border-radius:5px;color:var(--ink4);font:12px var(--sans);
+        cursor:pointer}
+  .mode button:hover{color:var(--ink2)}
+  .mode button.on{background:#1a1a1a;color:var(--ink)}
+  .fbadge{font-family:var(--mono);font-size:10px;line-height:15px;color:#0a0a0a;
+        background:var(--c-broken);border-radius:8px;padding:0 5px;font-weight:600}
+
+  /* report mode: score, fix-first, checklist, legend */
+  .report{max-width:640px;font-size:13px}
+  .report .score{font-family:var(--mono);font-size:13px;color:var(--ink);margin:6px 0 4px}
+  .report .score b{font-size:20px;font-weight:600;margin-right:8px}
+  .report .score .bad{color:var(--c-broken)}
+  .rsec{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+        color:var(--ink5);margin:26px 0 6px}
+  .rrow{display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;background:none;
+        border:0;border-top:1px solid var(--line);padding:8px 6px;color:var(--ink2);
+        font:13px/1.5 var(--sans);border-radius:0}
+  button.rrow{cursor:pointer}
+  button.rrow:hover{background:#141414}
+  .rrow .ck{flex:none;font-family:var(--mono);font-size:12px;width:14px}
+  .rrow.pass .ck{color:var(--ink5)}
+  .rrow.fail .ck{color:var(--c-broken)}
+  .rrow.fail{color:var(--ink)}
+  .rrow .jl{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--ink5);flex:none}
+  .rrow .fx{flex:none;font-family:var(--mono);font-size:11px;color:var(--ink5);width:14px}
+  .rrow .rslt{color:var(--ink2)}
+  .legend{border-top:1px solid var(--line);padding:10px 6px;color:var(--ink2);line-height:2}
+  .legend .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin:0 7px 0 0;
+        vertical-align:baseline}
+
+  /* sidebar token-tip bubble */
+  #tip{position:fixed;max-width:260px;background:var(--card2);border:1px solid var(--line2);
+       border-radius:8px;padding:7px 10px;font-size:11.5px;color:var(--ink);z-index:9;display:none;
+       pointer-events:none}
+  #tip.on{display:block}
+
+  @media (max-width:980px){
+    .app{display:block;border:0}
+    .side{width:auto;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line)}
+    .side .meta{display:none}
+    .main{padding:14px 14px 70px}
+    .pane.on{max-width:none}
+    .card{position:static;width:auto;display:none;margin:4px 4px 10px;opacity:1;pointer-events:auto}
+    .region.pin>.card{display:block}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="side">
+  <div class="mode">
+    <button id="mode-x" class="on">X-ray</button>
+    <!-- omit the .fbadge span entirely when zero checks fail -->
+    <button id="mode-r">Report <span class="fbadge">N_FAILS</span></button>
+  </div>
+  <nav class="tree">
+    <!-- icons: chevron (folders only), folder, file. Copy these SVGs verbatim per row. -->
+    <button class="trow drow" data-dir="root" style="--d:0">
+      <svg class="chev" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></svg>
+      <svg viewBox="0 0 16 16"><path d="M1.5 3.5h4l1.5 2h7.5v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-9z"/></svg>
+      <span class="nm">SKILL_NAME</span></button>
+    <div class="kids" data-group="root" style="--g:16px">
+      <button class="trow frow on" data-pane="skill" style="--d:1">
+        <svg viewBox="0 0 16 16"><path d="M4 1.5h5L12.5 5v9a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5v-12a.5.5 0 0 1 .5-.5z"/><path d="M9 1.5V5h3.5"/></svg>
+        <span class="nm">SKILL.md</span>
+        <span class="tk" data-tip="Body ~N_TRIGGER tk, paid when it fires. Description ~N_ALWAYS tk, paid every session. Estimates, ~4 chars per token.">~N_TRIGGER_SHORT</span></button>
+      <button class="trow drow" data-dir="refs" style="--d:1">
+        <svg class="chev" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></svg>
+        <svg viewBox="0 0 16 16"><path d="M1.5 3.5h4l1.5 2h7.5v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-9z"/></svg>
+        <span class="nm">references</span></button>
+      <div class="kids" data-group="refs" style="--g:30px">
+        <!-- one .frow per real file, --d:2. Unreachable: line-through the .nm, tip says
+             "never named in SKILL.md, can never load". -->
+        <button class="trow frow" data-pane="f1" style="--d:2">
+          <svg viewBox="0 0 16 16"><path d="M4 1.5h5L12.5 5v9a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5v-12a.5.5 0 0 1 .5-.5z"/><path d="M9 1.5V5h3.5"/></svg>
+          <span class="nm">example.md</span>
+          <span class="tk" data-tip="~800 tk, paid only if the run opens it.">~800</span></button>
+      </div>
+    </div>
+  </nav>
+  <div class="meta">x-ray · DATE</div>
+</aside>
+
+<main class="main">
+
+  <div class="pane on" id="pane-skill"><div class="reader">
+
+    <!-- DEMO REGION -->
+    <section class="region r-trigger" tabindex="0" data-role="Trigger" data-ln="L1–L4"
+             style="counter-reset:line 0">
+      <div class="txt"><div class="l">---</div><div class="l">name: demo-skill</div><div class="l">description: "Does the thing. Triggers: <mark class="trig" data-tip="Typing these exact words is what makes Claude pick this skill.">do the thing</mark>. <mark class="excl" data-tip="Says what this skill will not do, but never names the skill that should do it instead.">Not for real work</mark>."</div><div class="l">---</div></div>
+      <aside class="card">
+        <div class="word"></div>
+        <div class="sec">
+          <div class="head"><span class="role">Trigger</span><span class="ln">L1–L4</span></div>
+          <p class="does">This is why the skill fires; the orange clause is why it stays quiet.</p>
+          <div class="knob"><svg class="dial" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><g class="nd"><line x1="10" y1="10" x2="10" y2="4.6"/></g></svg>
+            <div class="kb"><b>Want it to fire more often?</b><span class="edit">Add broader words ("any demo").</span></div></div>
+          <div class="knob"><svg class="dial" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><g class="nd"><line x1="10" y1="10" x2="10" y2="4.6"/></g></svg>
+            <div class="kb"><b>Want it to fire only when you mean it?</b><span class="edit">Keep only phrases you literally type.</span></div></div>
+        </div>
+      </aside>
+    </section>
+
+  </div></div>
+
+  <!-- REPORT MODE. Checklist: references/prediction.md §4, all 17, authored verdicts, plain
+       words. data-jump="PANE:REGION_INDEX" flips to x-ray, opens that pane, scrolls + pins that
+       region. Fix-first = the three edits, ranked by size of behavior change, each with its
+       predicted result. Rows without a jump target are plain divs. -->
+  <div class="pane" id="pane-report"><div class="report">
+    <div class="score"><b>N_PASS/17</b> checks pass<span class="bad"> · N_FAILS to fix</span></div>
+    <div class="rsec">fix first</div>
+    <button class="rrow" data-jump="skill:0"><span class="fx">1</span>
+      <span>THE EDIT. <span class="rslt">THE PREDICTED RESULT.</span></span><span class="jl">L13</span></button>
+    <div class="rsec">every check</div>
+    <div class="rrow pass"><span class="ck">✓</span><span>CHECK, plain words.</span></div>
+    <button class="rrow fail" data-jump="skill:0"><span class="ck">✗</span>
+      <span>CHECK, plain words, what is missing.</span><span class="jl">L13</span></button>
+    <div class="rsec">what the colors mean</div>
+    <div class="legend">
+      <span class="sw" style="background:var(--c-start)"></span>blue starts it, the words that make the skill fire<br>
+      <span class="sw" style="background:var(--c-stop)"></span>orange stops it, the words that keep it quiet or hold a rule<br>
+      <span class="sw" style="background:var(--c-work)"></span>yellow is the work, the steps and taste that shape the output<br>
+      <span class="sw" style="background:var(--c-door)"></span>purple is a door, following it opens another file<br>
+      <span class="sw" style="background:var(--c-broken)"></span>red means broken, a failed check or a pointer to nowhere<br>
+      <span class="sw" style="background:var(--c-dead)"></span>gray means wasted, it costs tokens and changes nothing
+    </div>
+  </div></div>
+
+  <div class="pane" id="pane-f1">
+    <div class="reader"><section class="region r-pointer" tabindex="0" data-role="Reference"
+        data-ln="" style="counter-reset:line 0">
+      <div class="txt"><div class="l">FILE CONTENT, ESCAPED, ONE .l PER LINE</div></div>
+      <aside class="card"><div class="word"></div><div class="sec">
+        <div class="head"><span class="role">Reference</span></div>
+        <p class="does">ONE LINE: what this file feeds the skill.</p></div></aside>
+    </section></div>
+  </div>
+
+</main>
+</div>
+
+<div id="tip" role="tooltip"></div>
+<script>
+(function(){
+  var mob=function(){return window.innerWidth<=980};
+  /* tree */
+  document.querySelectorAll('.drow').forEach(function(d){
+    d.addEventListener('click',function(){
+      d.classList.toggle('closed');
+      var g=document.querySelector('.kids[data-group="'+d.dataset.dir+'"]');
+      if(g) g.classList.toggle('closed',d.classList.contains('closed'));
+    });
+  });
+  var rows=document.querySelectorAll('.frow'),panes=document.querySelectorAll('.pane');
+  var modeX=document.getElementById('mode-x'),modeR=document.getElementById('mode-r');
+  function showPane(id){panes.forEach(function(p){p.classList.toggle('on',p.id===id)});dropHold()}
+  function setMode(rep){if(modeX){modeX.classList.toggle('on',!rep);modeR.classList.toggle('on',rep)}}
+  rows.forEach(function(b){b.addEventListener('click',function(e){
+    if(e.target.classList.contains('tk')) return;
+    rows.forEach(function(o){o.classList.remove('on')});b.classList.add('on');
+    showPane('pane-'+b.dataset.pane); setMode(false);
+    unpin(); window.scrollTo(0,0);
+  })});
+  /* mode toggle: report swaps the pane; x-ray restores the selected file */
+  if(modeR){
+    modeR.addEventListener('click',function(){showPane('pane-report');setMode(true);unpin();window.scrollTo(0,0)});
+    modeX.addEventListener('click',function(){
+      var cur=document.querySelector('.frow.on');
+      showPane('pane-'+(cur?cur.dataset.pane:'skill'));setMode(false);window.scrollTo(0,0)});
+  }
+  /* report rows jump back into the file: data-jump="PANE:REGION_INDEX" */
+  document.querySelectorAll('[data-jump]').forEach(function(j){
+    j.addEventListener('click',function(){
+      var p=j.dataset.jump.split(':');
+      rows.forEach(function(o){o.classList.toggle('on',o.dataset.pane===p[0])});
+      showPane('pane-'+p[0]); setMode(false);
+      var reg=document.querySelectorAll('#pane-'+p[0]+' .region')[+p[1]];
+      if(reg){unpin();reg.classList.add('pin');pinned=reg;reg.scrollIntoView({block:'center'});}
+    });
+  });
+  /* sidebar token tips */
+  var tip=document.getElementById('tip');
+  document.querySelectorAll('.tk[data-tip]').forEach(function(t){
+    function show(){tip.textContent=t.dataset.tip;tip.classList.add('on');
+      var b=t.getBoundingClientRect();tip.style.left=Math.min(b.left,innerWidth-tip.offsetWidth-8)+'px';
+      tip.style.top=(b.bottom+6)+'px';}
+    t.addEventListener('mouseenter',show);
+    t.addEventListener('mouseleave',function(){tip.classList.remove('on')});
+    t.addEventListener('click',function(e){e.stopPropagation();
+      tip.classList.contains('on')?tip.classList.remove('on'):show()});
+  });
+  /* regions: floating card follows the cursor; click pins */
+  var regions=document.querySelectorAll('.region'),pinned=null,hold=null;
+  /* state-based card hold: no timers. A summoned card keeps its place and size until another
+     section is hovered, Esc is pressed, or the pointer leaves the reader column. */
+  function dropHold(){if(hold){hold.classList.remove('ghold');hold.style.minHeight='';hold=null}}
+  function unpin(){regions.forEach(function(o){o.classList.remove('pin')});pinned=null}
+  var mainEl=document.querySelector('.main');
+  if(mainEl) mainEl.addEventListener('mouseleave',function(){dropHold()});
+  regions.forEach(function(r){
+    var card=r.querySelector('.card'); if(!card) return;
+    r.addEventListener('mousemove',function(e){
+      if(mob()||r.classList.contains('pin')) return;
+      if(card.contains(e.target)) return;
+      var rb=r.getBoundingClientRect(),y=e.clientY-rb.top-24;
+      var max=r.offsetHeight-card.offsetHeight-8;
+      card.style.top=Math.max(8,Math.min(y,Math.max(8,max)))+'px';
+    });
+    r.addEventListener('mouseenter',function(){if(hold&&hold!==card)dropHold();card.classList.remove('ghold')});
+    r.addEventListener('mouseleave',function(){card.classList.remove('wmode');
+      card.classList.add('ghold');hold=card;});
+    card.addEventListener('mouseenter',function(){card.style.minHeight=card.offsetHeight+'px';});
+    r.addEventListener('click',function(e){
+      if(card.contains(e.target)||e.target.closest('mark')) return;
+      var was=r.classList.contains('pin');
+      unpin();
+      if(!was) {r.classList.add('pin');pinned=r;}
+    });
+    r.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();r.click();}
+    });
+  });
+  /* marked words swap the same card to word mode */
+  document.querySelectorAll('mark[data-tip]').forEach(function(m){
+    var r=m.closest('.region'),card=r&&r.querySelector('.card'); if(!card) return;
+    var word=card.querySelector('.word');
+    function fill(){
+      word.innerHTML='<div class="head"><span class="role">'+(r.dataset.role||'')+
+        ' › word</span><span class="ln">'+(r.dataset.ln||'')+'</span></div>'+
+        '<span class="wordchip"></span><p></p>';
+      word.querySelector('.wordchip').textContent=m.textContent;
+      word.querySelector('p').textContent=m.dataset.tip||'';
+    }
+    m.addEventListener('mouseenter',function(){ if(!mob()){m.classList.add('live');fill();card.classList.add('wmode')} });
+    m.addEventListener('mouseleave',function(){ m.classList.remove('live');card.classList.remove('wmode') });
+    m.addEventListener('click',function(e){ if(mob()){e.stopPropagation();
+      var r2=m.closest('.region'); unpin(); r2.classList.add('pin'); pinned=r2;
+      m.classList.add('live'); fill(); card.classList.add('wmode');} });
+  });
+  /* dial rows: tap toggles on touch (hover handles desktop) */
+  document.querySelectorAll('.knob').forEach(function(k){
+    k.addEventListener('click',function(){k.classList.toggle('on')});
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){unpin();dropHold();tip.classList.remove('on');
+      document.querySelectorAll('.card.wmode').forEach(function(c){c.classList.remove('wmode')})}
+  });
+})();
+</script>
+</body>
+</html>
