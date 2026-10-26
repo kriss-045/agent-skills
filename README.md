@@ -1,10 +1,10 @@
 # Agent Skills
 
+![The 12 Agent Skills in this repo, grouped into skill craft, writing, knowledge and career](assets/skills.png)
+
 These are the Agent Skills I run with Claude Code. A skill is a folder of markdown files that tells an AI agent how I want a particular job done: what to check, what good looks like, when to stop.
 
 I use them daily. Some build other skills, some hold my writing voice, some run reviews I got tired of running by hand.
-
-Browsable version with a file viewer: https://www.krisspatel.com/skill-repo
 
 ## Using one
 
